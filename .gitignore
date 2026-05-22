@@ -3,6 +3,7 @@ kafka-data/
 iceberg/iceberg/flink/lib/
 iceberg/iceberg/flink/plugins/
 iceberg/iceberg/trino/plugin/
+iceberg/iceberg/trino/data/
 *.jar
 *.log
 *.tmp
