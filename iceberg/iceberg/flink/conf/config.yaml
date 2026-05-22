@@ -1,0 +1,43 @@
+blob:
+  server:
+    port: '6124'
+taskmanager:
+  memory:
+    process:
+      size: 2048m
+  numberOfTaskSlots: '4'
+sql-gateway:
+  endpoint:
+    rest:
+      address: 0.0.0.0
+      port: '8083'
+  initialization-sql: /opt/flink/conf/init.sql
+classloader:
+  resolve-order: parent-first
+jobmanager:
+  rpc:
+    address: flink-jobmanager
+    port: '6123'
+  memory:
+    process:
+      size: 1600m
+execution:
+  runtime-mode: streaming
+query:
+  server:
+    port: '6125'
+rest:
+  port: '8081'
+  address: 0.0.0.0
+s3:
+  access-key: admin
+  connection:
+    ssl:
+      enabled: 'false'
+  secret-key: admin12345
+  endpoint: http://minio:9000
+  path:
+    style:
+      access: 'true'
+parallelism:
+  default: '1'

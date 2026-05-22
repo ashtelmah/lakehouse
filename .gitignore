@@ -1,0 +1,8 @@
+postgres-data/
+kafka-data/
+iceberg/iceberg/flink/lib/
+iceberg/iceberg/flink/plugins/
+iceberg/iceberg/trino/plugin/
+*.jar
+*.log
+*.tmp

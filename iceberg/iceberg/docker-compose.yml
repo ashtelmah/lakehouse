@@ -1,0 +1,164 @@
+services:
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
+    container_name: minio
+    hostname: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin12345
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+    networks:
+      - data-platform
+
+  postgres:
+    image: postgres:16
+    container_name: nessie-postgres
+    environment:
+      POSTGRES_DB: nessie
+      POSTGRES_USER: nessie
+      POSTGRES_PASSWORD: nessie
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - data-platform
+
+  nessie:
+    image: ghcr.io/projectnessie/nessie:0.107.5-java
+    container_name: nessie
+    hostname: nessie
+    ports:
+      - "19120:19120"
+      - "9009:9000"
+    environment:
+      - QUARKUS_PROFILE=prod
+      - NESSIE_VERSION_STORE_TYPE=JDBC
+      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgres:5432/nessie
+      - QUARKUS_DATASOURCE_USERNAME=nessie
+      - QUARKUS_DATASOURCE_PASSWORD=nessie
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - data-platform
+
+
+  trino:
+    image: trinodb/trino:481
+    container_name: trino
+    hostname: trino
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./trino/etc:/etc/trino
+      - trino-data:/data/trino
+    restart: unless-stopped
+    networks:
+      - data-platform
+
+  flink-jobmanager:
+    image: apache/flink:2.0.0-scala_2.12-java17
+    container_name: flink-jobmanager
+    hostname: flink-jobmanager
+    command: >
+      /opt/flink/bin/jobmanager.sh start-foreground
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        jobmanager.rpc.port: 6123
+        jobmanager.memory.process.size: 1600m
+        taskmanager.numberOfTaskSlots: 4
+        rest.address: 0.0.0.0
+        rest.port: 8081
+        parallelism.default: 1
+        classloader.resolve-order: parent-first
+        s3.endpoint: http://minio:9000
+        s3.access-key: admin
+        s3.secret-key: admin12345
+        s3.path.style.access: true
+        s3.connection.ssl.enabled: false
+    ports:
+      - "8085:8081"
+    volumes:
+      - ./flink/conf:/opt/flink/conf
+      - ./flink/plugins:/opt/flink/plugins
+      - ./flink/lib:/opt/flink/lib
+      - flink-data:/opt/flink/data
+    restart: unless-stopped
+    networks:
+      - data-platform
+
+  flink-taskmanager:
+    image: apache/flink:2.0.0-scala_2.12-java17
+    container_name: flink-taskmanager
+    hostname: flink-taskmanager
+    command: >
+      /opt/flink/bin/taskmanager.sh start-foreground
+    depends_on:
+      - flink-jobmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        jobmanager.rpc.port: 6123
+        taskmanager.memory.process.size: 2048m
+        taskmanager.numberOfTaskSlots: 4
+        classloader.resolve-order: parent-first
+        s3.endpoint: http://minio:9000
+        s3.access-key: admin
+        s3.secret-key: admin12345
+        s3.path.style.access: true
+        s3.connection.ssl.enabled: false
+    volumes:
+      - ./flink/conf:/opt/flink/conf
+      - ./flink/plugins:/opt/flink/plugins
+      - ./flink/lib:/opt/flink/lib
+      - flink-data:/opt/flink/data
+    restart: unless-stopped
+    networks:
+      - data-platform
+
+  flink-sql-gateway:
+    image: apache/flink:2.0.0-scala_2.12-java17
+    container_name: flink-sql-gateway
+    hostname: flink-sql-gateway
+    command: ["/opt/flink/init-runner.sh"]
+    depends_on:
+      - flink-jobmanager
+      - nessie
+      - minio
+    environment:
+      FLINK_PROPERTIES: |
+        sql-gateway.endpoint.rest.address: 0.0.0.0
+        sql-gateway.endpoint.rest.port: 8083
+        sql-gateway.initialization-sql: /opt/flink/conf/init.sql
+    volumes:
+      - ./flink/conf:/opt/flink/conf
+      - ./flink/plugins:/opt/flink/plugins
+      - ./flink/lib:/opt/flink/lib
+      - ./flink/init-runner.sh:/opt/flink/init-runner.sh
+      - flink-data:/opt/flink/data
+    ports:
+      - "8086:8083"
+    restart: unless-stopped
+    networks:
+      - data-platform
+
+networks:
+  data-platform:
+    external: true
+
+volumes:
+  postgres-data:
+  nessie-data:
+  minio-data:
+  trino-data:
+  flink-data:
