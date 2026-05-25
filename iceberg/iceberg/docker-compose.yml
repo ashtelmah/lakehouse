@@ -140,20 +140,19 @@ services:
       - nessie
       - minio
     environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: admin12345
+      AWS_REGION: us-east-1
+
       FLINK_PROPERTIES: |
         jobmanager.rpc.address: flink-jobmanager
         jobmanager.rpc.port: 6123
         sql-gateway.endpoint.rest.address: 0.0.0.0
         sql-gateway.endpoint.rest.port: 8087
-        sql-gateway.session.idle-timeout: 0
-        sql-gateway.session.check-interval: 0
-        sql-gateway.operation.retention-time: 3600s
-        sql-gateway.session.initialization-timeout: 2s
-        execution.target: local
-        execution.runtime-mode: streaming
-        parallelism.default: 1
+        execution.runtime-mode: batch
     volumes:
       - /opt/data/iceberg/flink/lib:/opt/flink/lib
+      - /opt/data/iceberg/flink/core-site.xml:/opt/flink/conf/core-site.xml
       - ./flink/plugins:/opt/flink/plugins
       - flink-data:/opt/flink/data
     ports:
@@ -162,6 +161,23 @@ services:
     networks:
       - data-platform
 
+  init-runner:
+    image: curlimages/curl
+    depends_on:
+      - flink-sql-gateway
+    network_mode: service:flink-sql-gateway
+    volumes:
+      - ./flink/init:/opt/flink/init
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      /opt/flink/init/init-runner.sh
+      if [ $$? -eq 0 ]; then
+        echo "Init completed successfully"
+      else
+        echo "Init failed!"
+        exit 1
+      fi
+    restart: on-failure
 
 networks:
   data-platform:

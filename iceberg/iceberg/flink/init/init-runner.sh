@@ -1,68 +1,90 @@
-#!/bin/bash
-set -e
+#!/bin/sh
 
-# ------------------------------------------------------------
-# Start the Flink SQL Gateway in the background
-# ------------------------------------------------------------
-echo "[init-runner] Starting SQL Gateway..."
-nohup /opt/flink/bin/sql-gateway.sh start-foreground > /opt/flink/log/gateway.log 2>&1 &
-GATEWAY_PID=$!
+GATEWAY="http://flink-sql-gateway:8087/v1"
 
-# ------------------------------------------------------------
-# Wait until the SQL Gateway REST API becomes available
-# ------------------------------------------------------------
-echo "[init-runner] Waiting for SQL Gateway REST API..."
-until curl -s http://127.0.0.1:8087/v1/sessions > /dev/null; do
-  sleep 1
+echo "[init-runner] Waiting for Flink SQL Gateway..."
+until curl -s "$GATEWAY/sessions" > /dev/null; do
+  sleep 2
 done
+echo "[init-runner] Flink SQL Gateway is UP."
 
-
-# ------------------------------------------------------------
-# Create a dedicated initialization session
-# ------------------------------------------------------------
-echo "[init-runner] Creating init session..."
-SESSION=$(curl -s -X POST http://127.0.0.1:8087/v1/sessions \
+# Create session
+SESSION=$(curl -s -X POST "$GATEWAY/sessions" \
   -H "Content-Type: application/json" \
   -d '{"sessionName": "init"}' \
-  | sed -E 's/.*"sessionHandle":"([^"]+)".*/\1/')
+  | sed -n 's/.*"sessionHandle":"\([^"]*\)".*/\1/p')
 
-echo "[init-runner] Session ID: $SESSION"
+echo "[init-runner] Session created: $SESSION"
 
-# ------------------------------------------------------------
-# Execute init.sql line-by-line, accumulating statements
-# until a semicolon is reached
-# ------------------------------------------------------------
-echo "[init-runner] Executing init.sql statement-by-statement..."
+# Execute SQL with polling
+run_sql() {
+  SQL="$1"
+  echo "[init-runner] Executing: $SQL"
 
+  ESCAPED=$(printf "%s" "$SQL" | sed 's/"/\\"/g')
+
+  # 1. submit
+  SUBMIT=$(curl -s -X POST "$GATEWAY/sessions/$SESSION/statements" \
+    -H "Content-Type: application/json" \
+    -d "{\"statement\": \"$ESCAPED\"}")
+
+  OP=$(printf "%s" "$SUBMIT" | sed -n 's/.*"operationHandle":"\([^"]*\)".*/\1/p')
+
+  if [ -z "$OP" ]; then
+    echo "[init-runner] ❌ No operationHandle"
+    echo "[init-runner] SUBMIT: $SUBMIT"
+    exit 1
+  fi
+
+  echo "[init-runner] Operation: $OP"
+
+  # 2. poll
+  for i in $(seq 1 20); do
+    RESP=$(curl -s "$GATEWAY/sessions/$SESSION/operations/$OP/status")
+    echo "[init-runner] RESPONSE $i: $RESP"
+
+    STATUS=$(printf "%s" "$RESP" | sed -n 's/.*"status":"\([^"]*\)".*/\1/p')
+
+    if [ "$STATUS" = "FINISHED" ]; then
+      echo "[init-runner] ✅ SUCCESS (status: $STATUS)"
+      return 0
+    fi
+
+    if [ "$STATUS" = "ERROR" ]; then
+      echo "[init-runner] ❌ ERROR"
+      exit 1
+    fi
+
+    sleep 1
+  done
+
+  echo "[init-runner] ⏰ TIMEOUT for operation $OP"
+  exit 1
+}
+
+# Read init.sql
 BUFFER=""
+trim() { printf "%s" "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
 
 while IFS= read -r line; do
+  CLEAN=$(trim "$line")
+
   # Skip empty lines
-  [[ -z "$line" ]] && continue
+  [ -z "$CLEAN" ] && continue
 
-  # Append line to buffer
-  BUFFER="${BUFFER}${line} "
+  # Skip SQL comments
+  case "$CLEAN" in
+    --*) continue ;;
+  esac
 
-  # When a semicolon is found, treat it as end of SQL statement
-  if [[ "$line" == *";" ]]; then
-    # Escape double quotes for JSON payload
-    STATEMENT=$(echo "$BUFFER" | sed 's/"/\\"/g')
+  BUFFER="$BUFFER $CLEAN"
 
-    echo "[init-runner] Executing statement: $STATEMENT"
-
-    # Send the SQL statement to the SQL Gateway REST API
-    curl -s -X POST http://127.0.0.1:8087/v1/sessions/$SESSION/statements \
-      -H "Content-Type: application/json" \
-      -d "{\"statement\": \"$STATEMENT\"}" > /dev/null
-
-    # Reset buffer for next statement
-    BUFFER=""
-  fi
+  case "$CLEAN" in
+    *\; )
+      run_sql "$BUFFER"
+      BUFFER=""
+      ;;
+  esac
 done < /opt/flink/init/init.sql
 
-# ------------------------------------------------------------
-# Initialization complete — hand control back to SQL Gateway
-# ------------------------------------------------------------
-echo "[init-runner] Init complete. Handing over to SQL Gateway."
-wait $GATEWAY_PID
-
+echo "[init-runner] Init SQL completed successfully."
