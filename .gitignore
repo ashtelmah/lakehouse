@@ -1,9 +1,23 @@
+# Runtime data
 postgres-data/
 kafka-data/
-iceberg/iceberg/flink/lib/
-iceberg/iceberg/flink/plugins/
-iceberg/iceberg/trino/plugin/
-iceberg/iceberg/trino/data/
+checkpoints/
+savepoints/
+
+# Python env
+venv/
+.venv/
+
+# JARs
 *.jar
+
+# Trino & Flink runtime
+iceberg/flink/usrlib/
+iceberg/flink/lib/
+iceberg/flink/plugins/
+iceberg/trino/plugin/
+iceberg/trino/data/
+
+# Logs & temp
 *.log
 *.tmp

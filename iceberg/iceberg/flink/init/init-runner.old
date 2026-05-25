@@ -12,7 +12,7 @@ GATEWAY_PID=$!
 # Wait until the SQL Gateway REST API becomes available
 # ------------------------------------------------------------
 echo "[init-runner] Waiting for SQL Gateway REST API..."
-until curl -s http://127.0.0.1:8083/v1/sessions > /dev/null; do
+until curl -s http://127.0.0.1:8087/v1/sessions > /dev/null; do
   sleep 1
 done
 
@@ -21,7 +21,7 @@ done
 # Create a dedicated initialization session
 # ------------------------------------------------------------
 echo "[init-runner] Creating init session..."
-SESSION=$(curl -s -X POST http://127.0.0.1:8083/v1/sessions \
+SESSION=$(curl -s -X POST http://127.0.0.1:8087/v1/sessions \
   -H "Content-Type: application/json" \
   -d '{"sessionName": "init"}' \
   | sed -E 's/.*"sessionHandle":"([^"]+)".*/\1/')
@@ -51,7 +51,7 @@ while IFS= read -r line; do
     echo "[init-runner] Executing statement: $STATEMENT"
 
     # Send the SQL statement to the SQL Gateway REST API
-    curl -s -X POST http://127.0.0.1:8083/v1/sessions/$SESSION/statements \
+    curl -s -X POST http://127.0.0.1:8087/v1/sessions/$SESSION/statements \
       -H "Content-Type: application/json" \
       -d "{\"statement\": \"$STATEMENT\"}" > /dev/null
 

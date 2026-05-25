@@ -1,43 +1,45 @@
-blob:
-  server:
-    port: '6124'
-taskmanager:
-  memory:
-    process:
-      size: 2048m
-  numberOfTaskSlots: '4'
-sql-gateway:
-  endpoint:
-    rest:
-      address: 0.0.0.0
-      port: '8083'
-  initialization-sql: /opt/flink/conf/init.sql
-classloader:
-  resolve-order: parent-first
-jobmanager:
-  rpc:
-    address: flink-jobmanager
-    port: '6123'
-  memory:
-    process:
-      size: 1600m
-execution:
-  runtime-mode: streaming
-query:
-  server:
-    port: '6125'
-rest:
-  port: '8081'
-  address: 0.0.0.0
-s3:
-  access-key: admin
-  connection:
-    ssl:
-      enabled: 'false'
-  secret-key: admin12345
-  endpoint: http://minio:9000
-  path:
-    style:
-      access: 'true'
-parallelism:
-  default: '1'
+[ERROR] Could not parse configurations properly.
+[ERROR] Raw output from BashJavaUtils:
+INFO  [] - Using standard YAML parser to load flink configuration file from /opt/flink/conf/config.yaml.
+ERROR [] - Failed to parse YAML configuration
+org.snakeyaml.engine.v2.exceptions.YamlEngineException: expected '<document start>', but found '<scalar>'
+ in reader, line 1, column 9
+
+	at org.snakeyaml.engine.v2.parser.ParserImpl$ParseDocumentStart.produce(ParserImpl.java:493) ~[flink-dist-2.1.2.jar:2.1.2]
+	at org.snakeyaml.engine.v2.parser.ParserImpl.lambda$produce$1(ParserImpl.java:232) ~[flink-dist-2.1.2.jar:2.1.2]
+	at java.util.Optional.ifPresent(Unknown Source) ~[?:?]
+	at org.snakeyaml.engine.v2.parser.ParserImpl.produce(ParserImpl.java:232) ~[flink-dist-2.1.2.jar:2.1.2]
+	at org.snakeyaml.engine.v2.parser.ParserImpl.peekEvent(ParserImpl.java:206) ~[flink-dist-2.1.2.jar:2.1.2]
+	at org.snakeyaml.engine.v2.parser.ParserImpl.checkEvent(ParserImpl.java:198) ~[flink-dist-2.1.2.jar:2.1.2]
+	at org.snakeyaml.engine.v2.composer.Composer.getSingleNode(Composer.java:131) ~[flink-dist-2.1.2.jar:2.1.2]
+	at org.snakeyaml.engine.v2.api.Load.loadOne(Load.java:110) ~[flink-dist-2.1.2.jar:2.1.2]
+	at org.snakeyaml.engine.v2.api.Load.loadFromInputStream(Load.java:123) ~[flink-dist-2.1.2.jar:2.1.2]
+	at org.apache.flink.configuration.YamlParserUtils.loadYamlFile(YamlParserUtils.java:100) [flink-dist-2.1.2.jar:2.1.2]
+	at org.apache.flink.configuration.GlobalConfiguration.loadYAMLResource(GlobalConfiguration.java:253) [flink-dist-2.1.2.jar:2.1.2]
+	at org.apache.flink.configuration.GlobalConfiguration.loadConfiguration(GlobalConfiguration.java:151) [flink-dist-2.1.2.jar:2.1.2]
+	at org.apache.flink.runtime.util.ConfigurationParserUtils.loadAndModifyConfiguration(ConfigurationParserUtils.java:176) [flink-dist-2.1.2.jar:2.1.2]
+	at org.apache.flink.runtime.util.bash.FlinkConfigLoader.loadAndModifyConfiguration(FlinkConfigLoader.java:47) [flink-dist-2.1.2.jar:2.24.3]
+	at org.apache.flink.runtime.util.bash.BashJavaUtils.runCommand(BashJavaUtils.java:68) [bash-java-utils.jar:2.24.3]
+	at org.apache.flink.runtime.util.bash.BashJavaUtils.main(BashJavaUtils.java:54) [bash-java-utils.jar:2.24.3]
+Exception in thread "main" java.lang.RuntimeException: Error parsing YAML configuration.
+	at org.apache.flink.configuration.GlobalConfiguration.loadYAMLResource(GlobalConfiguration.java:258)
+	at org.apache.flink.configuration.GlobalConfiguration.loadConfiguration(GlobalConfiguration.java:151)
+	at org.apache.flink.runtime.util.ConfigurationParserUtils.loadAndModifyConfiguration(ConfigurationParserUtils.java:176)
+	at org.apache.flink.runtime.util.bash.FlinkConfigLoader.loadAndModifyConfiguration(FlinkConfigLoader.java:47)
+	at org.apache.flink.runtime.util.bash.BashJavaUtils.runCommand(BashJavaUtils.java:68)
+	at org.apache.flink.runtime.util.bash.BashJavaUtils.main(BashJavaUtils.java:54)
+Caused by: org.snakeyaml.engine.v2.exceptions.YamlEngineException: expected '<document start>', but found '<scalar>'
+ in reader, line 1, column 9
+
+	at org.snakeyaml.engine.v2.parser.ParserImpl$ParseDocumentStart.produce(ParserImpl.java:493)
+	at org.snakeyaml.engine.v2.parser.ParserImpl.lambda$produce$1(ParserImpl.java:232)
+	at java.base/java.util.Optional.ifPresent(Unknown Source)
+	at org.snakeyaml.engine.v2.parser.ParserImpl.produce(ParserImpl.java:232)
+	at org.snakeyaml.engine.v2.parser.ParserImpl.peekEvent(ParserImpl.java:206)
+	at org.snakeyaml.engine.v2.parser.ParserImpl.checkEvent(ParserImpl.java:198)
+	at org.snakeyaml.engine.v2.composer.Composer.getSingleNode(Composer.java:131)
+	at org.snakeyaml.engine.v2.api.Load.loadOne(Load.java:110)
+	at org.snakeyaml.engine.v2.api.Load.loadFromInputStream(Load.java:123)
+	at org.apache.flink.configuration.YamlParserUtils.loadYamlFile(YamlParserUtils.java:100)
+	at org.apache.flink.configuration.GlobalConfiguration.loadYAMLResource(GlobalConfiguration.java:253)
+	... 5 more

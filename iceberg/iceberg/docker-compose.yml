@@ -51,7 +51,6 @@ services:
     networks:
       - data-platform
 
-
   trino:
     image: trinodb/trino:481
     container_name: trino
@@ -66,7 +65,7 @@ services:
       - data-platform
 
   flink-jobmanager:
-    image: apache/flink:2.0.0-scala_2.12-java17
+    image: apache/flink:2.1.2-scala_2.12-java17
     container_name: flink-jobmanager
     hostname: flink-jobmanager
     command: >
@@ -86,19 +85,21 @@ services:
         s3.secret-key: admin12345
         s3.path.style.access: true
         s3.connection.ssl.enabled: false
+        state.backend: filesystem
+        state.checkpoints.dir: s3://warehouse/flink-checkpoints/
+        state.savepoints.dir: s3://warehouse/flink-savepoints/
     ports:
       - "8085:8081"
     volumes:
-      - ./flink/conf:/opt/flink/conf
+      - /opt/data/iceberg/flink/lib:/opt/flink/lib
       - ./flink/plugins:/opt/flink/plugins
-      - ./flink/lib:/opt/flink/lib
       - flink-data:/opt/flink/data
     restart: unless-stopped
     networks:
       - data-platform
 
   flink-taskmanager:
-    image: apache/flink:2.0.0-scala_2.12-java17
+    image: apache/flink:2.1.2-scala_2.12-java17
     container_name: flink-taskmanager
     hostname: flink-taskmanager
     command: >
@@ -117,40 +118,50 @@ services:
         s3.secret-key: admin12345
         s3.path.style.access: true
         s3.connection.ssl.enabled: false
+        state.backend: filesystem
+        state.checkpoints.dir: s3://warehouse/flink-checkpoints/
+        state.savepoints.dir: s3://warehouse/flink-savepoints/
     volumes:
-      - ./flink/conf:/opt/flink/conf
+      - /opt/data/iceberg/flink/lib:/opt/flink/lib
       - ./flink/plugins:/opt/flink/plugins
-      - ./flink/lib:/opt/flink/lib
       - flink-data:/opt/flink/data
     restart: unless-stopped
     networks:
       - data-platform
 
   flink-sql-gateway:
-    image: apache/flink:2.0.0-scala_2.12-java17
+    image: apache/flink:2.1.2-scala_2.12-java17
     container_name: flink-sql-gateway
     hostname: flink-sql-gateway
-    command: ["/opt/flink/init-runner.sh"]
+    command: >
+      /opt/flink/bin/sql-gateway.sh start-foreground
     depends_on:
       - flink-jobmanager
       - nessie
       - minio
     environment:
       FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        jobmanager.rpc.port: 6123
         sql-gateway.endpoint.rest.address: 0.0.0.0
-        sql-gateway.endpoint.rest.port: 8083
-        sql-gateway.initialization-sql: /opt/flink/conf/init.sql
+        sql-gateway.endpoint.rest.port: 8087
+        sql-gateway.session.idle-timeout: 0
+        sql-gateway.session.check-interval: 0
+        sql-gateway.operation.retention-time: 3600s
+        sql-gateway.session.initialization-timeout: 2s
+        execution.target: local
+        execution.runtime-mode: streaming
+        parallelism.default: 1
     volumes:
-      - ./flink/conf:/opt/flink/conf
+      - /opt/data/iceberg/flink/lib:/opt/flink/lib
       - ./flink/plugins:/opt/flink/plugins
-      - ./flink/lib:/opt/flink/lib
-      - ./flink/init-runner.sh:/opt/flink/init-runner.sh
       - flink-data:/opt/flink/data
     ports:
-      - "8086:8083"
+      - "8087:8087"
     restart: unless-stopped
     networks:
       - data-platform
+
 
 networks:
   data-platform:
