@@ -16,39 +16,22 @@ CREATE DATABASE IF NOT EXISTS `bronze`;
 CREATE DATABASE IF NOT EXISTS `silver`;
 CREATE DATABASE IF NOT EXISTS `gold`;
 
-DROP TABLE IF EXISTS `raw`.`kafka_all_src_iceberg`;
-CREATE TABLE  `raw`.`kafka_all_src_iceberg` (
-    payload BYTES,
-    kafka_ts TIMESTAMP(3),
-    topic STRING,
-    kafka_partition INT,
-    kafka_offset BIGINT,
-
-    ingest_ts TIMESTAMP(3)
-)
-WITH (
-    'format-version' = '2'
-);
-
-
-DROP TABLE IF EXISTS `bronze`.`kafka_all_src_clean`;
-
-CREATE TABLE `bronze`.`kafka_all_src_clean` (
+CREATE TABLE IF NOT EXISTS `raw`.`kafka_all_src_iceberg` (
   payload STRING,
   kafka_ts TIMESTAMP(3)
 );
 
-DROP TABLE IF EXISTS `silver`.`kafka_all_src_enriched`;
-
-CREATE TABLE `silver`.`kafka_all_src_enriched` (
+CREATE TABLE IF NOT EXISTS `bronze`.`kafka_all_src_clean` (
   payload STRING,
   kafka_ts TIMESTAMP(3)
 );
 
-DROP TABLE IF EXISTS `gold`.`kafka_all_src_final`;
-
-CREATE TABLE `gold`.`kafka_all_src_final` (
+CREATE TABLE IF NOT EXISTS `silver`.`kafka_all_src_enriched` (
   payload STRING,
   kafka_ts TIMESTAMP(3)
 );
 
+CREATE TABLE IF NOT EXISTS `gold`.`kafka_all_src_final` (
+  payload STRING,
+  kafka_ts TIMESTAMP(3)
+);

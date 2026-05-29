@@ -71,6 +71,9 @@ services:
     command: >
       /opt/flink/bin/jobmanager.sh start-foreground
     environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: admin12345
+      AWS_REGION: us-east-1
       FLINK_PROPERTIES: |
         jobmanager.rpc.address: flink-jobmanager
         jobmanager.rpc.port: 6123
@@ -85,13 +88,14 @@ services:
         s3.secret-key: admin12345
         s3.path.style.access: true
         s3.connection.ssl.enabled: false
-        state.backend: filesystem
+        state.backend: hashmap
         state.checkpoints.dir: s3://warehouse/flink-checkpoints/
         state.savepoints.dir: s3://warehouse/flink-savepoints/
     ports:
       - "8085:8081"
     volumes:
       - /opt/data/iceberg/flink/lib:/opt/flink/lib
+      - /opt/data/iceberg/flink/jobs:/opt/flink/jobs
       - ./flink/plugins:/opt/flink/plugins
       - flink-data:/opt/flink/data
     restart: unless-stopped
@@ -106,7 +110,11 @@ services:
       /opt/flink/bin/taskmanager.sh start-foreground
     depends_on:
       - flink-jobmanager
+
     environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: admin12345
+      AWS_REGION: us-east-1
       FLINK_PROPERTIES: |
         jobmanager.rpc.address: flink-jobmanager
         jobmanager.rpc.port: 6123
@@ -118,7 +126,7 @@ services:
         s3.secret-key: admin12345
         s3.path.style.access: true
         s3.connection.ssl.enabled: false
-        state.backend: filesystem
+        state.backend: hashmap
         state.checkpoints.dir: s3://warehouse/flink-checkpoints/
         state.savepoints.dir: s3://warehouse/flink-savepoints/
     volumes:
@@ -152,6 +160,7 @@ services:
         execution.runtime-mode: batch
     volumes:
       - /opt/data/iceberg/flink/lib:/opt/flink/lib
+      - /opt/data/iceberg/flink/jobs:/opt/flink/jobs
       - /opt/data/iceberg/flink/core-site.xml:/opt/flink/conf/core-site.xml
       - ./flink/plugins:/opt/flink/plugins
       - flink-data:/opt/flink/data
