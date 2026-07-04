@@ -1,4 +1,5 @@
-# <img src="https://www.apache.org/foundation/press/kit/feather.svg" width="40"> Lakehouse Platform
+
+# <img src="https://github.com/ashtelmah/lakehouse/blob/main/assets/icons/feather.svg" width="40"> Lakehouse Platform
 
 ### Unified Streaming + Iceberg Architecture
 
