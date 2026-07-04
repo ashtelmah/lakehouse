@@ -1,0 +1,171 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- НОВИЙ ГРУПОВИЙ ІДЕНТИФІКАТОР -->
+    <groupId>com.fsilver</groupId>
+    <artifactId>fsilver</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+
+        <!-- FLINK CORE -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-dist</artifactId>
+            <version>2.1.2</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/iceberg/flink/lib/flink-dist-2.1.2.jar</systemPath>
+        </dependency>
+
+        <!-- FLINK STREAMING API -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-streaming-java</artifactId>
+            <version>2.1.2</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/iceberg/flink/lib/flink-dist-2.1.2.jar</systemPath>
+        </dependency>
+
+        <!-- FLINK TABLE RUNTIME -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-runtime</artifactId>
+            <version>2.1.2</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/iceberg/flink/lib/flink-table-runtime-2.1.2.jar</systemPath>
+        </dependency>
+
+        <!-- FLINK TABLE API -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-api-java-uber</artifactId>
+            <version>2.1.2</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/iceberg/flink/lib/flink-table-api-java-uber-2.1.2.jar</systemPath>
+        </dependency>
+
+        <!-- FLINK SQL KAFKA CONNECTOR -->
+<!-- FLINK DATASTREAM KAFKA CONNECTOR -->
+<dependency>
+    <groupId>org.apache.flink</groupId>
+    <artifactId>flink-connector-kafka</artifactId>
+    <version>5.0.0-2.1</version>
+    <scope>system</scope>
+    <systemPath>/opt/data/iceberg/flink/lib/flink-connector-kafka-5.0.0-2.1.jar</systemPath>
+</dependency>
+
+        <!-- ICEBERG -->
+        <dependency>
+            <groupId>org.apache.iceberg</groupId>
+            <artifactId>iceberg-flink-runtime-2.1</artifactId>
+            <version>1.11.0</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/iceberg/flink/lib/iceberg-flink-runtime-2.1-1.11.0.jar</systemPath>
+        </dependency>
+
+        <!-- HADOOP -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>3.3.6</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/iceberg/flink/lib/hadoop-common-3.3.6.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-auth</artifactId>
+            <version>3.3.6</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/iceberg/flink/lib/hadoop-auth-3.3.6.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-aws</artifactId>
+            <version>3.3.6</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/iceberg/flink/lib/hadoop-aws-3.3.6.jar</systemPath>
+        </dependency>
+
+        <!-- JACKSON -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.16.0</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/streaming/lib/jackson-core-2.16.0.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.16.0</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/streaming/lib/jackson-databind-2.16.0.jar</systemPath>
+        </dependency>
+
+        <!-- KAFKA CLIENTS -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>3.9.2</version>
+            <scope>system</scope>
+            <systemPath>/opt/data/streaming/lib/kafka-clients-3.9.2.jar</systemPath>
+        </dependency>
+
+<dependency>
+    <groupId>com.fasterxml.woodstox</groupId>
+    <artifactId>woodstox-core</artifactId>
+    <version>6.5.1</version>
+    <scope>system</scope>
+    <systemPath>/opt/data/iceberg/flink/lib/woodstox-core-6.5.1.jar</systemPath>
+</dependency>
+
+
+    </dependencies>
+
+    <build>
+        <finalName>fsilver</finalName>
+
+        <plugins>
+
+            <!-- Java 17 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+
+            <!-- Main class -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.fsilver.FsSilverJob</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

@@ -1,0 +1,6 @@
+/opt/data/streaming/job/fsilver/src/main/java/com/fsilver/SilverUpsert.java
+/opt/data/streaming/job/fsilver/src/main/java/com/fsilver/IcebergCatalogFactory.java
+/opt/data/streaming/job/fsilver/src/main/java/com/fsilver/FsSilverJob.java
+/opt/data/streaming/job/fsilver/src/main/java/com/fsilver/IcebergSinkFactory.java
+/opt/data/streaming/job/fsilver/src/main/java/com/fsilver/KafkaEvent.java
+/opt/data/streaming/job/fsilver/src/main/java/com/fsilver/IcebergPKExtractor.java

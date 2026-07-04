@@ -1,0 +1,8 @@
+com/fsilver/SilverUpsert.class
+com/fsilver/KafkaEvent.class
+com/fsilver/FsSilverJob.class
+com/fsilver/IcebergSinkFactory.class
+com/fsilver/IcebergPKExtractor.class
+com/fsilver/IcebergCatalogFactory.class
+com/fsilver/KafkaEvent$Operation.class
+com/fsilver/SilverUpsert$1.class

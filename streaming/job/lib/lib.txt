@@ -1,0 +1,29 @@
+shtelmakh_ao@hq01cdc1:/opt/data/streaming/job/lib$ ls -la
+total 647788
+drwxrwxr-x 2 shtelmakh_ao shtelmakh_ao      4096 Jul  2 19:58 .
+drwxrwxr-x 6 shtelmakh_ao shtelmakh_ao      4096 Jul  3 21:24 ..
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao 280645251 Jul  2 16:30 aws-java-sdk-bundle-1.12.262.jar
+-rw-r--r-- 1 shtelmakh_ao shtelmakh_ao    168463 May  3 14:42 flink-cep-2.1.2.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao    427689 Jul  2 19:55 flink-connector-kafka-5.0.0-2.1.jar
+-rwxrwxr-x 1 shtelmakh_ao shtelmakh_ao 191430107 Jul  1 23:48 flink-dist-2.1.2.jar
+-rwxrwxr-x 1 shtelmakh_ao shtelmakh_ao  15888120 Jul  1 23:48 flink-table-api-java-uber-2.1.2.jar
+-rw-r--r-- 1 shtelmakh_ao shtelmakh_ao  41539969 May  3 14:50 flink-table-planner-loader-2.1.2.jar
+-rwxrwxr-x 1 shtelmakh_ao shtelmakh_ao   3919964 Jul  1 23:48 flink-table-runtime-2.1.2.jar
+-rw-r--r-- 1 shtelmakh_ao shtelmakh_ao    106145 Jul  1 23:48 hadoop-auth-3.3.6.jar
+-rw-r--r-- 1 shtelmakh_ao shtelmakh_ao    786622 Jul  1 23:48 hadoop-aws-3.3.6.jar
+-rw-r--r-- 1 shtelmakh_ao shtelmakh_ao   4603101 Jul  1 23:48 hadoop-common-3.3.6.jar
+-rw-r--r-- 1 shtelmakh_ao shtelmakh_ao   3362359 Jul  2 16:26 hadoop-shaded-guava-1.1.1.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao   1477052 May 26  2021 hadoop-shaded-protobuf_3_7-1.1.1.jar
+-rwxrwxr-x 1 shtelmakh_ao shtelmakh_ao  63613165 Jul  2 16:47 iceberg-aws-bundle-1.11.0.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao  39122167 Jul  2 16:45 iceberg-flink-runtime-2.1-1.11.0.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao     78478 Jul  2 00:19 jackson-annotations-2.16.0.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao    579130 Jul  1 23:49 jackson-core-2.16.0.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao   1636721 Jul  1 23:49 jackson-databind-2.16.0.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao   9220052 Jul  2 19:58 kafka-clients-3.9.2.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao    356379 Jul  2 00:15 log4j-1.2-api-2.24.3.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao    348513 Jul  2 00:15 log4j-api-2.24.3.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao   1914666 Jul  2 00:15 log4j-core-2.24.3.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao    236114 Jul  2 00:15 log4j-layout-template-json-2.24.3.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao     25319 Jul  2 00:15 log4j-slf4j-impl-2.24.3.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao    195909 May 14  2020 stax2-api-4.2.1.jar
+-rw-rw-r-- 1 shtelmakh_ao shtelmakh_ao   1586395 Jul  2 16:05 woodstox-core-6.5.1.jar
