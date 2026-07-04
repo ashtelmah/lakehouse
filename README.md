@@ -16,7 +16,7 @@ MS SQL → Debezium → Kafka (KRaft, Avro) → Flink 2.0 (Dynamic Sink) → Ice
 |  | **Init Runner** — initializes catalogs, tables, functions |
 
 ---
-├─ /opt/data/
+📁 /opt/data/
 
 ├── streaming/      # Kafka (KRaft), Schema Registry, Debezium
 
