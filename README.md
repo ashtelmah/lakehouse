@@ -3,34 +3,133 @@
 
 ### Unified Streaming + Iceberg Architecture
 
-MS SQL → Debezium → Kafka (KRaft, Avro) → Flink 2.0 (Dynamic Sink) → Iceberg 1.11 (Nessie + MinIO) → Trino
+## MS SQL → Debezium → Kafka (KRaft, Avro) → Apache Flink 2.x (Dynamic CDC Sink) → Iceberg 1.11 (Nessie + MinIO) → Trino
+A production-style Modern Data Lakehouse built entirely on open-source technologies.
+
+The platform demonstrates an end-to-end CDC pipeline that captures changes from Microsoft SQL Server, processes them in real time, automatically synchronizes schema evolution, and stores analytics-ready data in Apache Iceberg.
 
 ---
-| **[Streaming Layer](ca://s?q=Streaming_Layer_details)** | **[Iceberg Layer](ca://s?q=Iceberg_Layer_details)** |
-| --- | --- |
-| **Kafka (KRaft mode)** — modern Kafka without ZooKeeper; broker + controller; ports 9092/29092/29093 | **MinIO (S3 storage)** — endpoints 9000/9001; stores Iceberg tables, checkpoints |
-| **Schema Registry** — Avro schemas; compatibility for Debezium & Flink | **Postgres (Nessie metadata)** — metadata backend for Nessie |
-| **Debezium Connect** — CDC ingestion; Avro converters; plugins in ``/opt/data/streaming/plugins`` | **Nessie Catalog** — Git‑like versioning; API 19120; UI 9009 |
-| **Redpanda Console** — UI for Kafka topics, schemas, connectors | **Trino (SQL engine)** — reads Iceberg V2; time‑travel; port 8082 |
-| **MS SQL → Debezium → Kafka** — full CDC pipeline | **Flink 2.x (JM/TM)** — SinkV2 → Iceberg; dynamic routing; checkpoints in MinIO |
-|  | **Flink SQL Gateway** — REST SQL endpoint 8087; executes Iceberg SQL |
-|  | **Init Runner** — initializes catalogs, tables, functions |
+
+# Architecture
+
+```text
+                      MS SQL Server
+                            │
+                            ▼
+                        Debezium CDC
+                            │
+                            ▼
+             Kafka (KRaft) + Schema Registry
+                            │
+                            ▼
+                     BronzeDecode Job
+             (Avro → Bronze JSON → KafkaBronze)
+                            │
+                            ▼
+        ┌──────────────────────────────────────────────┐
+        │                                              │
+        ▼                                              ▼
+    Schema Sync Job                               FSilver Job
+ (DDL & Schema Evolution)                  (UPSERT → Iceberg)
+        │                                              │
+        └──────────────────────┬───────────────────────┘
+                               ▼
+                 Iceberg Catalog (Nessie + MinIO)
+                               │
+                               ▼
+                           Trino SQL
+```
 
 ---
+
+# Project Structure
+
+```
 📁 /opt/data/
+├── streaming/          # Kafka (KRaft), Schema Registry, Debezium
+│   └── job/            # BronzeDecode, SyncJob, FsSilver
+├── iceberg/            # Flink 2.x, SQL Gateway, MinIO, Nessie, Trino
+├── dwh/                # Airflow (future)
+└── superset/           # BI (future)
+```
+---
+# Technology Stack & Capabilities
+| Layer                | Technology                    | Purpose                                              |
+| -------------------- | ----------------------------- | ---------------------------------------------------- |
+| Source Database      | Microsoft SQL Server          | Enterprise transactional data source                 |
+| Change Data Capture  | Debezium                      | Real-time capture of INSERT / UPDATE / DELETE events |
+| Streaming Platform   | Apache Kafka (KRaft)          | Distributed event streaming without ZooKeeper        |
+| Serialization        | Apache Avro + Schema Registry | Schema management and data contracts                 |
+| Stream Processing    | Apache Flink DataStream API   | Real-time CDC processing and transformations         |
+| Table Format         | Apache Iceberg V2             | ACID lakehouse tables with schema evolution          |
+| Catalog              | Project Nessie                | Versioned Iceberg metadata management                |
+| Object Storage       | MinIO (S3 API)                | Data lake storage layer                              |
+| Query Engine         | Trino                         | Interactive SQL analytics                            |
+| Language             | Java 17                       | Core implementation language                         |
+| Architecture Pattern | Metadata-driven pipeline      | Dynamic multi-table ingestion                        |
 
-├── streaming/      # Kafka (KRaft), Schema Registry, Debezium
+---
+# Custom Services
 
-├── iceberg/        # Flink 2.x, SQL Gateway, MinIO, Nessie, Trino
+| Job | Responsibility | Uses | Why it exists |
+| --- | --- | --- | --- |
+| **BronzeDecodeJob** | Converts Debezium **Avro** into enriched **Bronze JSON**. Adds metadata (topic/database/schema/table). Writes to ``KafkaBronze``. Supports ``snapshot`` + ``normal`` modes. | KafkaConsumer, KafkaProducer, AvroDecoder | Silver cannot ingest binary Avro. BronzeDecode normalizes CDC into JSON and provides routing metadata for downstream UPSERT. |
+| **Schema Sync Job** | Automatic **schema evolution**. Reads Debezium schema changes, compares Avro ↔ Iceberg, applies CREATE/ALTER, manages PK, processes manual ``schema.events``. | SchemaRegistryClient, KafkaConsumer, Flink SQL API | Iceberg schema must always match upstream DB schema. SyncJob ensures deterministic schema evolution and metadata consistency. |
+| **FsSilver Job** | Main **UPSERT engine**. Reads Bronze JSON, applies INSERT/UPDATE/DELETE, converts to RowData, writes to Iceberg using SinkV2. One DAG branch per table. | Flink DataStream API, IcebergSinkFactory | Iceberg does not support UPDATE directly. Silver performs equality deletes + inserts and guarantees correct CDC semantics. |
 
-├── dwh/            # Airflow (future)
+Detailed documentation for each service is available inside its own directory.
 
-└── superset/       # BI (future)
+---
+
+## Current Capabilities
+
+| Streaming | Lakehouse | Analytics | Infrastructure |
+|-----------|-----------|-----------|----------------|
+| SQL Server CDC | Iceberg V2 | Trino SQL | Docker |
+| Debezium | Schema Evolution | | KRaft |
+| Kafka | CDC UPSERT | | MinIO |
+| Bronze Layer | Silver Layer | | Nessie |
+
+---
+
+# Repository Guide
+
+| Directory | Description |
+|-----------|-------------|
+| `streaming/` | Kafka, Debezium, Schema Registry and custom streaming services |
+| `iceberg/` | Iceberg infrastructure including Flink, Nessie, MinIO and Trino |
+
+Each major component contains its own **README.md** with implementation details and design decisions.
+---
+# Architecture Decisions
+
+| Area                         | Decision                                                                  | Rationale                                                             |
+| ---------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **Multi-Database Scale**     | Designed for ~20 SQL Server databases and thousands of tables             | Supports enterprise-scale CDC ingestion without architectural changes |
+| **Kafka Topic Strategy**     | Database-level topic isolation with table metadata routing                | Provides better scalability, monitoring and operational control       |
+| **Bronze Layer Design**      | Centralized Debezium event normalization through BronzeDecode Job         | Decouples source CDC format from downstream processing layers         |
+| **Metadata-Driven Pipeline** | Dynamic table processing based on database/schema/table metadata          | New tables can be onboarded without creating dedicated pipelines      |
+| **Schema Management**        | Independent Schema Sync service                                           | Keeps Iceberg metadata synchronized with source database changes      |
+| **Processing Model**         | Flink-based Silver synchronization jobs                                   | Provides real-time CDC processing with scalable stateful streaming    |
+| **Deployment Strategy**      | Services can be deployed centrally or independently per database          | Enables workload isolation and horizontal scaling                     |
+| **Lakehouse Storage**        | Iceberg V2 + Nessie + MinIO                                               | Provides ACID tables, schema evolution and scalable object storage    |
+| **Analytics Layer**          | Trino for SQL analytics, Apache Druid for real-time dashboards (optional) | Separates analytical queries from operational monitoring workloads    |
+
+
+---
+## Roadmap
+
+| Core Platform | Data Processing | Analytics |
+|---------------|-----------------|-----------|
+| Native Iceberg Catalog API | Gold Layer | Apache Superset |
+| Full Schema Evolution (ADD / DROP / MODIFY / RENAME) | dbt | Semantic Layer |
+| Java SchemaSync (Iceberg API) | MERGE INTO Optimization | |
+| Apache Airflow | Data Quality Framework | |
+
 
 ---
 ## Author
 
-👤 **[ashtelmah](https://github.com/ashtelmah)**  
-*Lakehouse Architect*
+👤 **Andrii Shtelmakh**
 
-
+GitHub: https://github.com/ashtelmah

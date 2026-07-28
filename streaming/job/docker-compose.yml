@@ -1,0 +1,68 @@
+services:
+
+  bronze-decode:
+    build: ./bronzedecode
+    container_name: bronze-decode
+    networks:
+      - data-platform
+    volumes:
+      - /opt/data/streaming/lib:/app/lib
+    entrypoint: ["java", "-cp", "app.jar:/app/lib/*", "com.bronzedecode.BronzeDecodeJob", "snapshot"]
+    restart: unless-stopped
+
+  sync:
+    build: ./sync
+    container_name: sync
+    networks:
+      - data-platform
+    volumes:
+      - /opt/data/streaming/lib:/app/lib
+      - /opt/data/iceberg/flink/lib:/app/flink-lib
+    environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: admin12345
+      AWS_REGION: us-east-1
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: admin
+      S3_SECRET_KEY: admin12345
+      S3_REGION: us-east-1
+      S3_PATH_STYLE: "true"
+    entrypoint: ["java", "-cp", "app.jar:/app/lib/*:/app/flink-lib/*", "com.sync.Orchestrator", "snapshot"]
+    restart: unless-stopped
+
+  fsilver:
+    image: apache/flink:2.1.2-scala_2.12-java17
+    container_name: fsilver
+    networks:
+      - data-platform
+    environment:
+      # Kafka
+      KAFKA_BOOTSTRAP: kafka:9092
+      KAFKA_TOPIC: KafkaBronze
+      # Iceberg + MinIO
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: admin12345
+      AWS_REGION: us-east-1
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: admin
+      S3_SECRET_KEY: admin12345
+      S3_REGION: us-east-1
+      S3_PATH_STYLE: "true"
+      # Nessie
+      NESSIE_URI: http://nessie:19120/api/v2
+      NESSIE_REF: main
+    volumes:
+      - /opt/data/streaming/job/fsilver/target:/opt/flink/jobs
+      - /opt/data/streaming/job/lib:/opt/flink/lib
+     # - /opt/data/iceberg/flink/lib:/app/lib
+
+    entrypoint: [
+      "bash", "-c",
+      "sleep 5 && flink run -m flink-jobmanager:8081 /opt/flink/jobs/fsilver.jar"
+    ]
+    restart: unless-stopped
+
+networks:
+  data-platform:
+    external: true
+
